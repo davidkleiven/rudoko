@@ -26,6 +26,44 @@ impl Board {
     fn set_known(&mut self, row: usize, col: usize) {
         self.known[index(row, col)] = true
     }
+
+    fn is_in_row(&self, row: usize, value: u32) -> bool {
+        for c in 0..9 {
+            if self.get(row, c) == value {
+                return true
+            }
+        }
+        return false
+    }
+
+    fn is_in_col(&self, col: usize, value: u32) -> bool {
+        for r in 0..9 {
+            if self.get(r, col) == value {
+                return true
+            }
+        }
+        return false
+    }
+
+    /// is_in_tile checks if the passed number is in one of the tiles given by
+    /// given by trow and tcol. 0 < trow < 3 and 0 < tcol < 3
+    fn is_in_tile(&self, trow: usize, tcol: usize, value: u32) -> bool {
+        let row_start = trow*3;
+        let col_start = tcol*3;
+        for r in row_start..row_start+3 {
+            for c in col_start..col_start+3 {
+                if self.get(r, c) == value {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    /// valid_insert returns true if the passed value can be inserted at the suggested position
+    fn valid_insert(&self, row: usize, col: usize, value: u32) -> bool {
+        return !self.is_in_row(row, value) && !self.is_in_col(col, value) && !self.is_in_tile(row/3, col/3, value)
+    }
 }
 
 fn empty_board() -> Board {
@@ -149,5 +187,33 @@ mod tests {
             assert_eq!(board.get(sp.row, sp.col), sp.value);
             assert_eq!(board.is_known(sp.row, sp.col), true)
         }
+    }
+
+    #[test]
+    fn test_in_row_col() {
+        let mut board = empty_board();
+        board.set(0, 1, 1);
+        board.set(7, 3, 2);
+        assert_eq!(board.is_in_row(0, 1), true);
+        assert_eq!(board.is_in_row(7, 2), true);
+        assert_eq!(board.is_in_row(3, 2), false);
+        assert_eq!(board.is_in_row(1, 1), false);
+
+        assert_eq!(board.is_in_col(0, 1), false);
+        assert_eq!(board.is_in_col(7, 2), false);
+        assert_eq!(board.is_in_col(3, 2), true);
+        assert_eq!(board.is_in_col(1, 1), true);
+
+        assert_eq!(board.is_in_tile(0, 0, 1), true);
+        assert_eq!(board.is_in_tile(2, 1, 2), true);
+        assert_eq!(board.is_in_tile(0, 0, 2), false);
+        assert_eq!(board.is_in_tile(2, 1, 1), false);
+
+        assert_eq!(board.valid_insert(0, 0, 1), false);
+        assert_eq!(board.valid_insert(0, 0, 2), true);
+        assert_eq!(board.valid_insert(8, 3, 2), false);
+        assert_eq!(board.valid_insert(7, 4, 2), false);
+        assert_eq!(board.valid_insert(8, 4, 2), false);
+        assert_eq!(board.valid_insert(8, 5, 2), false);
     }
 }
