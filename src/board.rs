@@ -1,4 +1,3 @@
-use std::env;
 use std::io::BufReader;
 use std::io::BufRead;
 
@@ -15,15 +14,6 @@ pub fn index2crd(idx: usize) -> (usize, usize) {
     return (idx/9, idx % 9)
 }
 
-pub fn is_equal(b1: &Board, b2: &Board) -> bool {
-    for idx in 0..81 {
-        if b1.get_index(idx) != b2.get_index(idx) {
-            return false
-        }
-    }
-    return true
-}
-
 impl Board {
     pub fn get(&self, row: usize, col: usize) -> u32 {
         return self.get_index(index(row, col))
@@ -33,15 +23,11 @@ impl Board {
         self.set_index(index(row, col), value);
     }
 
-    pub fn is_known(&self, row: usize, col: usize) -> bool {
-        return self.index_is_known(index(row, col))
-    }
-
     pub fn set_known(&mut self, row: usize, col: usize) {
         self.known[index(row, col)] = true
     }
 
-    pub fn index_is_known(&self, idx: usize) -> bool {
+    pub fn is_known(&self, idx: usize) -> bool {
         return self.known[idx]
     }
 
@@ -93,11 +79,22 @@ impl Board {
 
     pub fn print(&self) {
         for r in 0..9 {
-            for c in 0..9 {
-                println!("{}", self.get(r, c));
+            if r % 3 == 0 {
+                print!("-------------------------------\n")
             }
-            print!("");
+            let mut row = "".to_string();
+            for c in 0..9 {
+                if c % 3 == 0 {
+                    row.push_str("|");
+                }
+                row.push_str(" ");
+                row.push_str(&self.get(r, c).to_string());
+                row.push_str(" ");
+            }
+            row.push_str("|");
+            println!("{}", row);
         }
+        print!("-------------------------------\n")
     }
 }
 
@@ -157,6 +154,7 @@ pub fn load_board(fname: String) -> Board {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::env;
 
     #[test]
     fn test_set_get() {
@@ -168,9 +166,9 @@ mod tests {
     #[test]
     fn test_set_get_known() {
         let mut board = empty_board();
-        assert_eq!(board.is_known(4, 5), false);
+        assert_eq!(board.is_known(index(4, 5)), false);
         board.set_known(4, 5);
-        assert_eq!(board.is_known(4, 5), true);
+        assert_eq!(board.is_known(index(4, 5)), true);
     }
 
     // SparseBoard holds row, column and expected value
@@ -227,7 +225,7 @@ mod tests {
 
         for sp in expect {
             assert_eq!(board.get(sp.row, sp.col), sp.value);
-            assert_eq!(board.is_known(sp.row, sp.col), true)
+            assert_eq!(board.is_known(index(sp.row, sp.col)), true)
         }
     }
 
