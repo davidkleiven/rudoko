@@ -1,11 +1,10 @@
 use super::board;
-use std::env;
 use log::{warn, info};
 
 
 fn next_unknown_square(current: usize, board: &board::Board) -> usize {
     for idx in current+1..81 {
-        if !board.index_is_known(idx) {
+        if !board.is_known(idx) {
             return idx
         }
     }
@@ -14,7 +13,7 @@ fn next_unknown_square(current: usize, board: &board::Board) -> usize {
 
 fn prev_unknown_square(current: usize, board: &board::Board) -> usize{
     for idx in (0..current).rev() {
-        if !board.index_is_known(idx) {
+        if !board.is_known(idx) {
             return idx
         }
     }
@@ -32,7 +31,7 @@ fn next_valid_number(idx: usize, board: &board::Board) -> u32 {
 }
 
 
-fn brute_force_solve(board: &mut board::Board, max_attempts: i32) {
+pub fn brute_force_solve(board: &mut board::Board, max_attempts: i32) {
     let mut attempts = 0;
     let mut idx = 0;
     loop {
@@ -63,6 +62,16 @@ fn brute_force_solve(board: &mut board::Board, max_attempts: i32) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::env;
+
+    fn boards_are_equal(b1: &board::Board, b2: &board::Board) -> bool {
+        for idx in 0..81 {
+            if b1.get_index(idx) != b2.get_index(idx) {
+                return false
+            }
+        }
+        return true
+    }
 
     #[test]
     fn test_next_prev_unknown_square() {
@@ -106,7 +115,7 @@ mod tests {
             let solution_file = format!("{}{}{}", manifest_dir, "/resources/", case.1);
             let solution = board::load_board(solution_file);
 
-            assert_eq!(board::is_equal(&solution, &board), true, "Test #{}", i);
+            assert_eq!(boards_are_equal(&solution, &board), true, "Test #{}", i);
         }
     }
 }

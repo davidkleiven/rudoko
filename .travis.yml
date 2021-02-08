@@ -3,3 +3,4 @@ language: rust
 script:
   - cargo build --verbose --workspace
   - cargo test --verbose --workspace
+  - bash run_cli.sh
