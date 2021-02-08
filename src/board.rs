@@ -7,24 +7,50 @@ pub struct Board {
     known: [bool; 81]
 }
 
-fn index(row: usize, col: usize) -> usize {
+pub fn index(row: usize, col: usize) -> usize {
     return row*9 + col
 }
+
+pub fn index2crd(idx: usize) -> (usize, usize) {
+    return (idx/9, idx % 9)
+}
+
+pub fn is_equal(b1: &Board, b2: &Board) -> bool {
+    for idx in 0..81 {
+        if b1.get_index(idx) != b2.get_index(idx) {
+            return false
+        }
+    }
+    return true
+}
+
 impl Board {
-    fn get(&self, row: usize, col: usize) -> u32 {
-        return self.numbers[index(row, col)]
+    pub fn get(&self, row: usize, col: usize) -> u32 {
+        return self.get_index(index(row, col))
     }
 
-    fn set(&mut self, row: usize, col: usize, value: u32) {
-        self.numbers[index(row, col)] = value
+    pub fn set(&mut self, row: usize, col: usize, value: u32) {
+        self.set_index(index(row, col), value);
     }
 
-    fn is_known(&self, row: usize, col: usize) -> bool {
-        return self.known[index(row, col)]
+    pub fn is_known(&self, row: usize, col: usize) -> bool {
+        return self.index_is_known(index(row, col))
     }
 
-    fn set_known(&mut self, row: usize, col: usize) {
+    pub fn set_known(&mut self, row: usize, col: usize) {
         self.known[index(row, col)] = true
+    }
+
+    pub fn index_is_known(&self, idx: usize) -> bool {
+        return self.known[idx]
+    }
+
+    pub fn get_index(&self, idx: usize) -> u32 {
+        return self.numbers[idx]
+    }
+
+    pub fn set_index(&mut self, idx: usize, value: u32) {
+        self.numbers[idx] = value
     }
 
     fn is_in_row(&self, row: usize, value: u32) -> bool {
@@ -61,48 +87,64 @@ impl Board {
     }
 
     /// valid_insert returns true if the passed value can be inserted at the suggested position
-    fn valid_insert(&self, row: usize, col: usize, value: u32) -> bool {
+    pub fn valid_insert(&self, row: usize, col: usize, value: u32) -> bool {
         return !self.is_in_row(row, value) && !self.is_in_col(col, value) && !self.is_in_tile(row/3, col/3, value)
+    }
+
+    pub fn print(&self) {
+        for r in 0..9 {
+            for c in 0..9 {
+                println!("{}", self.get(r, c));
+            }
+            print!("");
+        }
     }
 }
 
-fn empty_board() -> Board {
+pub fn empty_board() -> Board {
     return Board{
         numbers: [0; 81],
         known: [false; 81]
     }
 }
 
-/// Returns a board loaded from a comma separated file
+/// Returns a board loaded from a text separated file
 ///
 /// # Arguments
 /// 
 /// * `fname` - Filename with the sudoku board
 /// 
-/// The sudoku board should be listed in a comma separated file where
+/// The sudoku board should be listed in a text separated file where
 /// known entries are given by their numbers and unknown fields are indicated with
 /// x
 /// 
-/// Example (showing the two first rows)
+/// Example:
 /// 
-/// 3,x,x,x,x,4,x,8,x
-/// x,2,x,x,x,1,x,7,x
+/// xxxxx7xxx
+/// x65xxx89x
+/// 4xx5x1xx7
+/// 89x1x5x26
+/// xx26x43xx
+/// x4x9x3x1x
+/// 3xx7x8xx4
+/// x57xxx98x
+/// xxxx3xxxx
 pub fn load_board(fname: String) -> Board {
     let mut board = empty_board();
 
     let f = match std::fs::File::open(fname) {
         Ok(value) => value,
         Err(e) => {
-            panic!("Could not open CSV file".to_string() + &e.to_string())
+            panic!("Could not open txt file".to_string() + &e.to_string())
         }
     };
 
     let file = BufReader::new(f);
 
     for (row, line) in file.lines().enumerate() {
-        for (col, value) in line.unwrap().split(",").enumerate() {
-            if value != "x" {
-                let num: u32 = value.parse().unwrap();
+        for (col, value) in line.unwrap().chars().enumerate() {
+            if value != 'x' && value.is_digit(10) {
+                let num: u32 = value.to_digit(10).unwrap();
                 board.set_known(row, col);
                 board.set(row, col, num);
             }
@@ -148,7 +190,7 @@ mod tests {
 
         assert_ne!(manifest_dir, "unknown");
 
-        let fname = manifest_dir + "/resources/board1.csv";
+        let fname = manifest_dir + "/resources/board1.txt";
         let board = load_board(fname);
 
         let expect = vec![
@@ -215,5 +257,14 @@ mod tests {
         assert_eq!(board.valid_insert(7, 4, 2), false);
         assert_eq!(board.valid_insert(8, 4, 2), false);
         assert_eq!(board.valid_insert(8, 5, 2), false);
+    }
+
+    #[test]
+    fn test_idx2row() {
+        for idx in 0..81 {
+            let (r, c) = index2crd(idx);
+            let got = index(r, c);
+            assert_eq!(idx, got);
+        }
     }
 }
