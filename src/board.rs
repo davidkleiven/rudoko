@@ -132,7 +132,7 @@ pub fn load_board(fname: String) -> Board {
     let f = match std::fs::File::open(fname) {
         Ok(value) => value,
         Err(e) => {
-            panic!("Could not open txt file".to_string() + &e.to_string())
+            panic!("Could not open txt file: {}",  &e.to_string())
         }
     };
 
